@@ -1,0 +1,30 @@
+export default {
+  extends: ["@commitlint/config-workspace-scopes"],
+  rules: {
+    "type-case": [2, "always", "lower-case"],
+    "subject-case": [2, "always", "lower-case"],
+    "subject-full-stop": [2, "never", "."],
+    "header-max-length": [2, "always", 100],
+    "body-max-line-length": [2, "always", 100],
+    "footer-max-line-length": [2, "always", 100],
+    "scope-case": [2, "always", "lower-case"],
+    "scope-empty": [2, "never"],
+    "type-enum": [
+      2,
+      "always",
+      [
+        "build",
+        "chore",
+        "ci",
+        "docs",
+        "feat",
+        "fix",
+        "perf",
+        "refactor",
+        "revert",
+        "style",
+        "test",
+      ],
+    ],
+  },
+};
