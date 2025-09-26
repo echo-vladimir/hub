@@ -6,6 +6,7 @@ export default config({
   storage: {
     kind: "github",
     repo: "echo-vladimir/hub",
+    branchPrefix: "content/",
   },
   collections: {
     posts: collection({
