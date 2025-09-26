@@ -1,12 +1,11 @@
-import { config, collection, singleton, fields } from "@keystatic/core";
+import { collection, config, fields } from "@keystatic/core";
 
 export const markdocConfig = fields.markdoc.createMarkdocConfig({});
 
 export default config({
   storage: {
-    kind: "local",
-    // kind: "github",
-    // repo: "echo-vladimir/hub",
+    kind: "github",
+    repo: "echo-vladimir/hub",
   },
   collections: {
     posts: collection({
@@ -19,5 +18,5 @@ export default config({
         content: fields.markdoc({ label: "Content" }),
       },
     }),
-  }
+  },
 });
