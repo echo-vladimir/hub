@@ -1,53 +1,63 @@
-name: code-ci
+name: ci
 on:
   pull_request:
-    paths-ignore:
-      - 'content/**'
-      - 'public/media/**'
   push:
     branches: [main]
-    paths-ignore:
-      - 'content/**'
-      - 'public/media/**'
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  build:
-    name: code
+  verify:
+    name: verify
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout the repo
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install pnpm
+      - name: Detect Changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            app:
+              - '**/*'
+              - '!content/**'
+              - '!public/media/**'
+            cms:
+              - 'content/**'
+              - 'public/media/**'
+
+      - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           run_install: false
-
-      - name: Install Node.js
+        
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'pnpm'
-      
-      - name: Install dependencies
+
+      - name: Install Dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Check (Biome)
+      - name: Run Biome Check
+        if: ${{ steps.changes.outputs.app == 'true' }}
         run: pnpm run check --colors=off
 
-      - name: Typecheck
+      - name: Run Type Check
+        if: ${{ steps.changes.outputs.app == 'true' }}
         run: pnpm run typecheck
 
-      - name: Build
+      - name: Build Application
         run: pnpm run build
         env:
           KEYSTATIC_GITHUB_CLIENT_ID: ${{ secrets.KEYSTATIC_GITHUB_CLIENT_ID }}
           KEYSTATIC_GITHUB_CLIENT_SECRET: ${{ secrets.KEYSTATIC_GITHUB_CLIENT_SECRET }}
           KEYSTATIC_SECRET: ${{ secrets.KEYSTATIC_SECRET }}
 
-      - name: Lighthouse
+      - name: Run Lighthouse Audit
+        if: ${{ steps.changes.outputs.app == 'true' }}
         uses: treosh/lighthouse-ci-action@v12
         with:
           configPath: ./lighthouserc.json
