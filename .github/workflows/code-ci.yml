@@ -2,26 +2,50 @@ name: code-ci
 on:
   pull_request:
     paths-ignore:
-      - "content/**"
-      - "public/media/**"
+      - 'content/**'
+      - 'public/media/**'
   push:
     branches: [main]
     paths-ignore:
-      - "content/**"
-      - "public/media/**"
+      - 'content/**'
+      - 'public/media/**'
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: "pnpm" }
-      - run: corepack enable
-      - run: pnpm i --frozen-lockfile
-      - run: pnpm run check --colors=off
-      - run: pnpm run typecheck
-      - run: pnpm run build
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: Show pnpm version
+        run: pnpm -v
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Check (Biome)
+        run: pnpm run check --colors=off
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Build
+        run: pnpm run build
+
       - name: Lighthouse
         uses: treosh/lighthouse-ci-action@v12
         with:
