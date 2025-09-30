@@ -56,6 +56,16 @@ jobs:
           KEYSTATIC_GITHUB_CLIENT_SECRET: ${{ secrets.KEYSTATIC_GITHUB_CLIENT_SECRET }}
           KEYSTATIC_SECRET: ${{ secrets.KEYSTATIC_SECRET }}
 
+      - name: Run SCA Monitor • Snyk (high+ only)
+        if: ${{ steps.changes.outputs.app == 'true' }}
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: >
+            test --all-projects --detection-depth=4 --severity-threshold=high
+            --exclude=node_modules,.next
+
       - name: Run Lighthouse Audit
         if: ${{ steps.changes.outputs.app == 'true' }}
         uses: treosh/lighthouse-ci-action@v12
