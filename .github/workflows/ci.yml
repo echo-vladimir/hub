@@ -8,6 +8,9 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   verify:
+    permissions:
+      contents: read
+      security-events: write
     name: verify
     runs-on: ubuntu-latest
     steps:
@@ -31,12 +34,12 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           run_install: false
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
@@ -53,18 +56,26 @@ jobs:
         run: pnpm run build
         env:
           KEYSTATIC_GITHUB_CLIENT_ID: ${{ secrets.KEYSTATIC_GITHUB_CLIENT_ID }}
-          KEYSTATIC_GITHUB_CLIENT_SECRET: ${{ secrets.KEYSTATIC_GITHUB_CLIENT_SECRET }}
+          KEYSTATIC_GITHUB_CLIENT_SECRET:
+            ${{ secrets.KEYSTATIC_GITHUB_CLIENT_SECRET }}
           KEYSTATIC_SECRET: ${{ secrets.KEYSTATIC_SECRET }}
 
-      - name: Run SCA Monitor • Snyk (high+ only)
+      - name: Run SCA Scan • Snyk
         if: ${{ steps.changes.outputs.app == 'true' }}
         uses: snyk/actions/node@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: >
-            test --all-projects --detection-depth=4 --severity-threshold=high
-            --exclude=node_modules,.next
+            --all-projects --detection-depth=4 --package-manager=pnpm
+            --sarif-file-output=snyk.sarif --exclude=node_modules,.next
+
+      - name: Upload SARIF • GitHub Code Scanning
+        if: ${{ steps.changes.outputs.app == 'true' }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk.sarif
 
       - name: Run Lighthouse Audit
         if: ${{ steps.changes.outputs.app == 'true' }}
