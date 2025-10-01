@@ -1,32 +1,36 @@
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: weekly
+      day: monday
       time: "09:00"
-      timezone: "Europe/Warsaw"
-    open-pull-requests-limit: 5
+      timezone: Europe/Warsaw
+    open-pull-requests-limit: 1
+    labels: [deps, actions]
     groups:
       actions-minor:
-        patterns: ["actions/*", "*/*@v*"]
-        update-types: ["minor", "patch"]
+        patterns: ["*"]
+        update-types: [minor, patch]
 
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: npm
+    directory: /
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: weekly
+      day: monday
       time: "09:15"
-      timezone: "Europe/Warsaw"
-    open-pull-requests-limit: 5
+      timezone: Europe/Warsaw
+    open-pull-requests-limit: 1
     versioning-strategy: increase-if-necessary
-    commit-message:
-      prefix: "deps"
-      include: "scope"
+    commit-message: { prefix: deps, include: scope }
+    labels: [deps, npm]
     groups:
-      next-ecosystem:
-        patterns: ["next", "@next/*", "react", "react-dom"]
-      linting:
-        patterns: ["@biomejs/*", "eslint*", "@typescript-eslint/*"]
+      all-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+    allow:
+      - dependency-type: direct
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
