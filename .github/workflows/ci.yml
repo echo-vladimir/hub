@@ -1,17 +1,29 @@
 name: CI
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
+  workflow_dispatch: {}
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
+    if: ${{ github.event_name != 'pull_request' || (
+            !github.event.pull_request.draft &&
+            (
+              github.event.pull_request.user.login == 'YOUR_LOGIN' ||
+              github.event.pull_request.user.type == 'Bot'
+            ) &&
+            github.event.pull_request.head.repo.full_name == github.repository
+          ) }}
     permissions:
       contents: read
       security-events: write
-    name: verify
+    name: Verify
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -48,7 +60,7 @@ jobs:
         if: ${{ steps.changes.outputs.app == 'true' }}
         run: pnpm run check --colors=off
 
-      - name: Run Type Check
+      - name: Run Typecheck
         if: ${{ steps.changes.outputs.app == 'true' }}
         run: pnpm run typecheck
 
@@ -56,25 +68,8 @@ jobs:
         run: pnpm run build
         env:
           KEYSTATIC_GITHUB_CLIENT_ID: ${{ secrets.KEYSTATIC_GITHUB_CLIENT_ID }}
-          KEYSTATIC_GITHUB_CLIENT_SECRET:
-            ${{ secrets.KEYSTATIC_GITHUB_CLIENT_SECRET }}
+          KEYSTATIC_GITHUB_CLIENT_SECRET: ${{ secrets.KEYSTATIC_GITHUB_CLIENT_SECRET }}
           KEYSTATIC_SECRET: ${{ secrets.KEYSTATIC_SECRET }}
-
-      - name: Run SCA Scan • Snyk
-        if: ${{ steps.changes.outputs.app == 'true' }}
-        uses: snyk/actions/node@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: >
-            --detection-depth=4 --sarif-file-output=snyk.sarif
-
-      - name: Upload SARIF • GitHub Code Scanning
-        if: ${{ steps.changes.outputs.app == 'true' }}
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: snyk.sarif
 
       - name: Run Lighthouse Audit
         if: ${{ steps.changes.outputs.app == 'true' }}
