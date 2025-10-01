@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
-    "@commitlint/cli": "^19.8.1",
+    "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^19.8.1",
     "@commitlint/config-workspace-scopes": "^19.8.1",
     "@tailwindcss/postcss": "^4",
