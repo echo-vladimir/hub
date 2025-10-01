@@ -1,4 +1,4 @@
-name: ci
+name: CI
 on:
   pull_request:
   push:
@@ -68,8 +68,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: >
-            --all-projects --detection-depth=4 --package-manager=pnpm
-            --sarif-file-output=snyk.sarif --exclude=node_modules,.next
+            --detection-depth=4 --sarif-file-output=snyk.sarif
 
       - name: Upload SARIF • GitHub Code Scanning
         if: ${{ steps.changes.outputs.app == 'true' }}
