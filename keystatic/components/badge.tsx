@@ -1,7 +1,7 @@
-import Image from "next/image";
 import { fields } from "@keystatic/core";
 import { inline } from "@keystatic/core/content-components";
 import { Tickets } from "lucide-react";
+import Image from "next/image";
 
 export const Badge = inline({
   label: "Badge",

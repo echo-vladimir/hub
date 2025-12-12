@@ -1,7 +1,7 @@
-import Image from "next/image";
 import { fields } from "@keystatic/core";
 import { block } from "@keystatic/core/content-components";
 import { Image as ImageIcon } from "lucide-react";
+import Image from "next/image";
 
 const Media = block({
   label: "Media",
@@ -54,7 +54,7 @@ const Media = block({
             caption: fields.text({ label: "Caption" }),
           }),
         }),
-      }
+      },
     ),
   },
   ContentView: ({ value }) => {
