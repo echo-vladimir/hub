@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { fields } from "@keystatic/core";
 import { block } from "@keystatic/core/content-components";
 import { SquareArrowOutUpRight } from "lucide-react";

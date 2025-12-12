@@ -54,7 +54,7 @@ const Media = block({
             caption: fields.text({ label: "Caption" }),
           }),
         }),
-      },
+      }
     ),
   },
   ContentView: ({ value }) => {
