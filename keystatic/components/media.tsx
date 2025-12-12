@@ -1,11 +1,11 @@
+import Image from "next/image";
 import { fields } from "@keystatic/core";
 import { block } from "@keystatic/core/content-components";
-import { Image } from "lucide-react";
-import React from "react";
+import { Image as ImageIcon } from "lucide-react";
 
 const Media = block({
   label: "Media",
-  icon: <Image />,
+  icon: <ImageIcon />,
   schema: {
     media: fields.conditional(
       fields.select({
@@ -54,58 +54,54 @@ const Media = block({
             caption: fields.text({ label: "Caption" }),
           }),
         }),
-      },
+      }
     ),
   },
   ContentView: ({ value }) => {
     const media = value.media;
+
     switch (media.discriminant) {
       case "image": {
         const imageValue = media.value;
-        if (!imageValue || !imageValue.asset) {
-          return (
-            <div style={{ fontSize: 12, padding: 10, opacity: 0.4 }}>
-              NO IMAGE
-            </div>
-          );
+
+        if (!imageValue?.asset) {
+          return <div className="p-2.5 text-xs opacity-40">NO IMAGE</div>;
         }
+
         const buffer = imageValue.asset.data;
         const blob = new Blob([new Uint8Array(buffer)]);
         const url = URL.createObjectURL(blob);
+
         return (
-          <img
+          <Image
             src={url}
             alt={imageValue.alt ?? ""}
-            style={{ width: "100%", display: "block", borderRadius: 8 }}
+            width={1200}
+            height={800}
+            className="block w-full h-auto"
+            sizes="100vw"
+            unoptimized
           />
         );
       }
 
       case "video": {
         const videoValue = media.value;
-        if (!videoValue || !videoValue.url) {
-          return (
-            <div style={{ fontSize: 12, padding: 10, opacity: 0.4 }}>
-              MISSING VIDEO
-            </div>
-          );
+
+        if (!videoValue?.url) {
+          return <div className="p-2.5 text-xs opacity-40">MISSING VIDEO</div>;
         }
+
         return (
-          <video
-            controls
-            style={{ width: "100%", display: "block", borderRadius: 8 }}
-          >
+          <video controls className="block w-full">
+            <track default kind="captions" label="English" />
             <source src={videoValue.url} type="video/mp4" />
           </video>
         );
       }
 
       default:
-        return (
-          <div style={{ fontSize: 12, padding: 10, opacity: 0.4 }}>
-            NO MEDIA
-          </div>
-        );
+        return <div className="p-2.5 text-xs opacity-40">NO MEDIA</div>;
     }
   },
 });

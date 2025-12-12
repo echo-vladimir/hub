@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { fields } from "@keystatic/core";
 import { block } from "@keystatic/core/content-components";
 import { SquareArrowOutUpRight } from "lucide-react";
@@ -23,66 +24,29 @@ const Bookmark = block({
     const displayTitle = title || url || "Link title";
 
     return (
-      <div
-        style={{
-          border: "1px solid #E5E7EB",
-          borderRadius: 8,
-          padding: 8,
-          background: "#FFFFFF",
-          display: "flex",
-          gap: 8,
-          alignItems: "flex-start",
-        }}
-      >
+      <div className="flex items-start gap-2 rounded-lg border border-zinc-200 bg-white p-2">
         {/* 1/3 */}
         {image && (
-          <div
-            style={{
-              flex: "0 0 33.333%",
-              maxWidth: "33.333%",
-            }}
-          >
-            <img
+          <div className="w-1/3 shrink-0">
+            <Image
               src={image}
               alt={displayTitle ?? ""}
-              style={{
-                width: "100%",
-                height: "auto",
-                borderRadius: 4,
-                display: "block",
-                objectFit: "cover",
-              }}
+              width={320}
+              height={180}
+              unoptimized
+              className="block h-auto w-full rounded object-cover"
             />
           </div>
         )}
 
         {/* 2/3 */}
-        <div
-          style={{
-            flex: 1,
-            minWidth: 0,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 14,
-              fontWeight: 600,
-              marginBottom: 4,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 truncate text-sm font-semibold">
             {displayTitle}
           </div>
 
           {description && (
-            <div
-              style={{
-                fontSize: 12,
-                color: "#4B5563",
-              }}
-            >
+            <div className="text-xs text-zinc-600 line-clamp-3">
               {description}
             </div>
           )}

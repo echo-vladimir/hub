@@ -1,7 +1,50 @@
-import React from "react";
 import { fields } from "@keystatic/core";
 import { block } from "@keystatic/core/content-components";
 import { FileCodeIcon } from "lucide-react";
+
+function parseSingleIframe(code: string) {
+  if (typeof window === "undefined") return null;
+
+  const doc = new DOMParser().parseFromString(code, "text/html");
+  const iframe = doc.querySelector("iframe");
+  if (!iframe) return null;
+
+  const allEls = Array.from(doc.body.querySelectorAll("*"));
+  if (allEls.length !== 1 || allEls[0].tagName.toLowerCase() !== "iframe")
+    return null;
+
+  const src = iframe.getAttribute("src") ?? "";
+  let url: URL;
+  try {
+    url = new URL(src);
+  } catch {
+    return null;
+  }
+
+  if (url.protocol !== "https:") return null;
+  const allowedHosts = new Set([
+    "www.youtube.com",
+    "youtube.com",
+    "player.vimeo.com",
+    "www.figma.com",
+    "codesandbox.io",
+  ]);
+  if (!allowedHosts.has(url.hostname)) return null;
+
+  const w = Number(iframe.getAttribute("width") ?? 16);
+  const h = Number(iframe.getAttribute("height") ?? 9);
+
+  return {
+    src: url.toString(),
+    width: Number.isFinite(w) && w > 0 ? w : 16,
+    height: Number.isFinite(h) && h > 0 ? h : 9,
+    title: iframe.getAttribute("title") ?? "Embed",
+    allow: iframe.getAttribute("allow") ?? undefined,
+    allowFullScreen:
+      iframe.hasAttribute("allowfullscreen") ||
+      iframe.getAttribute("allowfullscreen") !== null,
+  };
+}
 
 const Embed = block({
   label: "Embed",
@@ -21,31 +64,27 @@ const Embed = block({
     }),
   },
   ContentView: ({ value }) => {
-    const code = (value.code ?? "").trim();
-    if (!code) return null;
+    const data = parseSingleIframe(value.code);
+    if (!data)
+      return (
+        <div style={{ fontSize: 12, padding: 10, opacity: 0.4 }}>
+          Invalid iframe
+        </div>
+      );
 
-    const w = Number(code.match(/width="(\d+)"/i)?.[1] ?? 16);
-    const h = Number(code.match(/height="(\d+)"/i)?.[1] ?? 9);
-    const ratio = w > 0 && h > 0 ? `${w} / ${h}` : "16 / 9";
+    const ratio = `${data.width} / ${data.height}`;
 
     return (
-      <div style={{ maxWidth: "100%", margin: "0 auto" }}>
-        <div
-          style={{ position: "relative", width: "100%", aspectRatio: ratio }}
-        >
-          <style>{`
-            .ks-raw-embed iframe {
-              position: absolute !important;
-              inset: 0 !important;
-              width: 100% !important;
-              height: 100% !important;
-              max-width: 100% !important;
-              display: block !important;
-            }
-          `}</style>
-          <div
-            className="ks-raw-embed"
-            dangerouslySetInnerHTML={{ __html: code }}
+      <div className="mx-auto w-full max-w-full">
+        <div className="relative w-full" style={{ aspectRatio: ratio }}>
+          <iframe
+            src={data.src}
+            title={data.title}
+            allow={data.allow}
+            allowFullScreen={data.allowFullScreen}
+            loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
+            className="absolute inset-0 h-full w-full border-0"
           />
         </div>
       </div>

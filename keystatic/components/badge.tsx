@@ -1,7 +1,7 @@
+import Image from "next/image";
 import { fields } from "@keystatic/core";
 import { inline } from "@keystatic/core/content-components";
 import { Tickets } from "lucide-react";
-import React from "react";
 
 export const Badge = inline({
   label: "Badge",
@@ -25,14 +25,13 @@ export const Badge = inline({
   ContentView: ({ value }) => {
     if (!value.imageUrl) return <span>{value.alt}</span>;
     return (
-      <img
+      <Image
         src={value.imageUrl}
         alt={value.alt || "Badge"}
-        style={{
-          height: 18,
-          verticalAlign: "middle",
-          display: "inline-block",
-        }}
+        className="inline-block h-[4.5] w-auto align-middle"
+        width={100}
+        height={20}
+        unoptimized
       />
     );
   },

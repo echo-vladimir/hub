@@ -1,7 +1,6 @@
 import { fields } from "@keystatic/core";
 import { wrapper } from "@keystatic/core/content-components";
 import { CircleQuestionMark } from "lucide-react";
-import React from "react";
 
 const Callout = wrapper({
   label: "Callout",
@@ -18,20 +17,8 @@ const Callout = wrapper({
   },
   ContentView: ({ value, children }) => {
     return (
-      <div
-        style={{
-          padding: 10,
-          background: "rgba(0,0,0,0.01)",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 12,
-            fontWeight: "bold",
-            opacity: 0.6,
-            marginBottom: 6,
-          }}
-        >
+      <div className="p-2.5 bg-black/1">
+        <div className="mb-1.5 text-xs font-bold opacity-60">
           {value.variant?.toUpperCase() ?? "NOTE"}
         </div>
         <div>{children}</div>

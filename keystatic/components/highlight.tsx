@@ -1,7 +1,6 @@
 import { fields } from "@keystatic/core";
 import { mark } from "@keystatic/core/content-components";
 import { Highlighter } from "lucide-react";
-import React from "react";
 
 const Highlight = mark({
   label: "Highlight",

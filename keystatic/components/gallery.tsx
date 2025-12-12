@@ -1,6 +1,5 @@
 import { repeating } from "@keystatic/core/content-components";
 import { Images } from "lucide-react";
-import React from "react";
 
 const Gallery = repeating({
   label: "Gallery",
@@ -19,13 +18,7 @@ const Gallery = repeating({
     // }),
   },
   ContentView: ({ children }) => (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(5, minmax(0,1fr))",
-        gap: 8,
-      }}
-    >
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 p-4">
       {children}
     </div>
   ),
