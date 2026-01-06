@@ -76,7 +76,12 @@ export function Dropdown({
         style={{ zIndex: 40 }}
       />
 
-      <FloatingFocusManager context={dd.context} modal={dd.modal}>
+      <FloatingFocusManager
+        context={dd.context}
+        initialFocus={-1}
+        returnFocus={false}
+        modal={false}
+      >
         <div
           ref={dd.refs.setFloating}
           style={{ ...dd.floatingStyles, zIndex: 50 }}
