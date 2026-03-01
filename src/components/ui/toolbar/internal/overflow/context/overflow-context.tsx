@@ -2,7 +2,7 @@
 
 import { createContext, type ReactNode, useContext } from "react";
 
-export type Slot = "link" | "trigger" | "content";
+export type Slot = "action" | "trigger" | "content";
 
 export type SlotRenderer = {
   render: () => ReactNode;

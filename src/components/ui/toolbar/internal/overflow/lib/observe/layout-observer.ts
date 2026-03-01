@@ -32,11 +32,12 @@ export function createLayoutObserver(opts?: { debug?: boolean }) {
       ? new window.MutationObserver(onMutation)
       : new NoopMO();
 
-  const resizeCbs = new Set<Callback>();
-  const mutateCbs = new Set<Callback>();
+  const resizeCbs = new Map<Callback, number>();
+  const mutateCbs = new Map<Callback, number>();
 
   const resizeRef = new WeakMap<Element, number>();
   const mutateRef = new WeakMap<Element, number>();
+  const mutationRoots = new Map<Element, MutationObserverInit>();
 
   // batching
   let rafId = 0;
@@ -44,6 +45,19 @@ export function createLayoutObserver(opts?: { debug?: boolean }) {
 
   function log(...a: unknown[]) {
     if (debug && isClient) console.log("[layout]", ...a);
+  }
+
+  function addCallbackRef(store: Map<Callback, number>, cb: Callback) {
+    store.set(cb, (store.get(cb) ?? 0) + 1);
+  }
+
+  function removeCallbackRef(store: Map<Callback, number>, cb: Callback) {
+    const next = (store.get(cb) ?? 1) - 1;
+    if (next <= 0) {
+      store.delete(cb);
+      return;
+    }
+    store.set(cb, next);
   }
 
   function scheduleFrame() {
@@ -54,8 +68,8 @@ export function createLayoutObserver(opts?: { debug?: boolean }) {
       if (!dirty) return;
       dirty = false;
       if (debug) log("run rAF");
-      for (const cb of resizeCbs) cb();
-      for (const cb of mutateCbs) cb();
+      for (const cb of resizeCbs.keys()) cb();
+      for (const cb of mutateCbs.keys()) cb();
     });
     if (debug) log("scheduled rAF");
   }
@@ -75,12 +89,12 @@ export function createLayoutObserver(opts?: { debug?: boolean }) {
       if (n === 1) resizeObs.observe(el);
       resizeRef.set(el, n);
 
-      resizeCbs.add(cb);
+      addCallbackRef(resizeCbs, cb);
       dirty = true;
       scheduleFrame();
 
       return () => {
-        resizeCbs.delete(cb);
+        removeCallbackRef(resizeCbs, cb);
         const cur = (resizeRef.get(el) ?? 1) - 1;
         if (cur <= 0) {
           resizeRef.delete(el);
@@ -110,19 +124,26 @@ export function createLayoutObserver(opts?: { debug?: boolean }) {
       },
     ): Unsub {
       const n = (mutateRef.get(root) ?? 0) + 1;
-      if (n === 1) mutationObs.observe(root, opts);
+      if (n === 1) {
+        mutationRoots.set(root, opts);
+        mutationObs.observe(root, opts);
+      }
       mutateRef.set(root, n);
 
-      mutateCbs.add(cb);
+      addCallbackRef(mutateCbs, cb);
       dirty = true;
       scheduleFrame();
 
       return () => {
-        mutateCbs.delete(cb);
+        removeCallbackRef(mutateCbs, cb);
         const cur = (mutateRef.get(root) ?? 1) - 1;
         if (cur <= 0) {
           mutateRef.delete(root);
+          mutationRoots.delete(root);
           mutationObs.disconnect();
+          for (const [el, nextOpts] of mutationRoots) {
+            mutationObs.observe(el, nextOpts);
+          }
         } else {
           mutateRef.set(root, cur);
         }

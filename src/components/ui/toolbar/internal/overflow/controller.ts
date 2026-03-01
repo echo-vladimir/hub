@@ -34,6 +34,7 @@ export function createOverflowController(
 
   let inProgress = false;
   let lastChangeAt = 0;
+  let hostUnsub: null | (() => void) = null;
   let moreUnsub: null | (() => void) = null;
 
   const scheduler = createScheduler(debounceMs);
@@ -43,11 +44,17 @@ export function createOverflowController(
   let onPreMinCross: (n: number) => void = () => {};
 
   function setHost(el: HTMLElement | null) {
+    if (hostUnsub) {
+      hostUnsub();
+      hostUnsub = null;
+    }
+
     host = el;
     if (!host) return;
+
     const unResize = observer.observeResize(host, requestRecalc);
     const unMut = observer.observeMutations(host, requestRecalc);
-    return () => {
+    hostUnsub = () => {
       unResize();
       unMut();
     };
@@ -86,7 +93,7 @@ export function createOverflowController(
 
       if (!allMeasured(units, axis)) return; // waiting data-w/h
       const reserve = reserveFromMore(moreEl, axis, observer);
-      const avail = availMainPx(host, axis, reserve, safetyPx);
+      const avail = availMainPx(host, axis);
 
       const cross = computePreMinCross(axis, units, moreEl, observer);
       preMinCross = Math.max(DEFAULTS.preMinFallback, Math.round(cross));
@@ -148,6 +155,10 @@ export function createOverflowController(
     },
     destroy() {
       scheduler.cancel();
+      if (hostUnsub) {
+        hostUnsub();
+        hostUnsub = null;
+      }
       if (moreUnsub) {
         moreUnsub();
         moreUnsub = null;

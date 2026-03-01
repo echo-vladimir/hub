@@ -56,6 +56,25 @@ export function ToolbarOverflowProvider({
     return () => controller.destroy();
   }, [controller]);
 
+  const setHost = useCallback(
+    (el: HTMLElement | null) => {
+      controller.setHost(el);
+      if (el) controller.requestRecalc();
+    },
+    [controller],
+  );
+
+  const setMore = useCallback(
+    (el: HTMLElement | null) => {
+      controller.setMore(el);
+    },
+    [controller],
+  );
+
+  const requestRecalc = useCallback(() => {
+    controller.requestRecalc();
+  }, [controller]);
+
   const registryRef = useRef(new Map<string, SlotRegistry>());
   const [, forceUpdate] = useState(0);
 
@@ -75,7 +94,7 @@ export function ToolbarOverflowProvider({
     const next = { ...prev };
     delete next[slot];
 
-    if (!next.link && !next.trigger && !next.content) {
+    if (!next.action && !next.trigger && !next.content) {
       registryRef.current.delete(id);
     } else {
       registryRef.current.set(id, next);
@@ -89,12 +108,9 @@ export function ToolbarOverflowProvider({
 
   const value = useMemo<ToolbarOverflowContextValue>(
     () => ({
-      setHost: (el) => {
-        controller.setHost(el);
-        if (el) controller.requestRecalc();
-      },
-      setMore: (el) => controller.setMore(el),
-      requestRecalc: () => controller.requestRecalc(),
+      setHost,
+      setMore,
+      requestRecalc,
 
       isReady,
       hiddenItemIds,
@@ -105,7 +121,9 @@ export function ToolbarOverflowProvider({
       getSlot,
     }),
     [
-      controller,
+      setHost,
+      setMore,
+      requestRecalc,
       isReady,
       hiddenItemIds,
       hiddenItemSet,

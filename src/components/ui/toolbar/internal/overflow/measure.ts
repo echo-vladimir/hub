@@ -33,14 +33,9 @@ export function reserveFromMore(
   return axis === "row" ? box.w : box.h;
 }
 
-export function availMainPx(
-  host: HTMLElement,
-  axis: Axis,
-  reserve: number,
-  safetyPx: number,
-) {
+export function availMainPx(host: HTMLElement, axis: Axis) {
   const base = axis === "row" ? host.clientWidth : host.clientHeight;
-  return base - reserve - (safetyPx + EPS);
+  return base - EPS;
 }
 
 export function buildInputState(
