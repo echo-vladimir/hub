@@ -5,6 +5,7 @@ import {
   flip,
   offset,
   type Placement,
+  type ReferenceType,
   safePolygon,
   shift,
   useClick,
@@ -26,6 +27,8 @@ type UseDropdownOptions = OverlayId & {
   placement?: Placement;
   modal?: boolean;
   lockScroll?: boolean;
+  strategy?: "absolute" | "fixed";
+  trackScroll?: boolean;
 };
 
 const isActive = (
@@ -44,6 +47,8 @@ export function useDropdown({
   placement = "bottom-start",
   modal = true,
   lockScroll,
+  strategy = "absolute",
+  trackScroll = true,
 }: UseDropdownOptions) {
   const { active, setActive, getUserVariant } = useOverlay();
 
@@ -65,12 +70,24 @@ export function useDropdown({
     [setActive, getUserVariant, scope, id],
   );
 
+  const whileElementsMounted = useCallback(
+    (reference: ReferenceType, floating: HTMLElement, update: () => void) =>
+      autoUpdate(reference, floating, update, {
+        ancestorScroll: trackScroll,
+        ancestorResize: true,
+        elementResize: true,
+        layoutShift: true,
+      }),
+    [trackScroll],
+  );
+
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
     middleware: [offset(8), flip({ padding: 8 }), shift({ padding: 8 })],
-    whileElementsMounted: autoUpdate,
+    whileElementsMounted,
     placement,
+    strategy,
   });
 
   const hover = useHover(context, {
