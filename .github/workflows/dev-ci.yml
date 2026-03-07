@@ -1,0 +1,117 @@
+name: Dev CI
+on:
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: Base branch for diff
+        required: true
+        default: main
+        type: string
+      run_lighthouse:
+        description: Run Lighthouse audit
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+concurrency:
+  group: development-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  scope:
+    name: Development Scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.actor == github.repository_owner
+    outputs:
+      app: ${{ steps.classify.outputs.app }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Classify Changes
+        id: classify
+        shell: bash
+        run: |
+          base_ref="${{ github.event.inputs.base_ref || 'main' }}"
+          app=false
+
+          git fetch --no-tags --depth=1 origin "$base_ref"
+
+          if ! git rev-parse --verify --quiet "origin/$base_ref" >/dev/null; then
+            echo "Missing origin/$base_ref"
+            exit 1
+          fi
+
+          while IFS= read -r path; do
+            [[ -z "$path" ]] && continue
+
+            if [[ "$path" != content/* && "$path" != public/media/* ]]; then
+              app=true
+              break
+            fi
+          done < <(git diff --name-only "origin/$base_ref...HEAD" --)
+
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+
+      - name: Note Scope Result
+        if: ${{ steps.classify.outputs.app != 'true' }}
+        run: echo "No development changes detected."
+
+  verify:
+    name: Development Verify
+    needs: scope
+    if: ${{ needs.scope.result == 'success' && needs.scope.outputs.app == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      KEYSTATIC_GITHUB_CLIENT_ID: ${{ secrets.KEYSTATIC_GITHUB_CLIENT_ID }}
+      KEYSTATIC_GITHUB_CLIENT_SECRET: ${{ secrets.KEYSTATIC_GITHUB_CLIENT_SECRET }}
+      KEYSTATIC_SECRET: ${{ secrets.KEYSTATIC_SECRET }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+        with:
+          version: 10.17.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Run Biome Check
+        run: pnpm run biome:check -- --colors=off
+
+      - name: Run Typecheck
+        run: pnpm run typecheck
+
+      - name: Build Application
+        run: pnpm run build
+
+      - name: Run Lighthouse Audit
+        if: ${{ github.event.inputs.run_lighthouse == 'true' }}
+        uses: treosh/lighthouse-ci-action@fcd65974f7c4c2bf0ee9d09b84d2489183c29726 # v12.6.1
+        with:
+          configPath: ./lighthouserc.json
+          uploadArtifacts: true
