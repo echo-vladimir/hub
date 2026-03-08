@@ -8,25 +8,53 @@ updates:
       time: "09:00"
       timezone: Europe/Warsaw
     open-pull-requests-limit: 1
+    assignees: [echo-vladimir]
     labels: [dependencies, github actions]
     groups:
-      actions-minor:
+      actions-minor-patch:
         patterns: ["*"]
         update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+      day: monday
+      time: "09:30"
+      timezone: Europe/Warsaw
+    open-pull-requests-limit: 1
+    assignees: [echo-vladimir]
+    labels: [dependencies, github actions, major]
+    groups:
+      actions-major:
+        patterns: ["*"]
+        update-types: [major]
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-minor, version-update:semver-patch]
 
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
       day: monday
-      time: "09:15"
+      time: "10:00"
       timezone: Europe/Warsaw
-    open-pull-requests-limit: 1
+    open-pull-requests-limit: 2
     versioning-strategy: increase-if-necessary
-    commit-message: { prefix: deps, include: scope }
+    commit-message: { prefix: chore, include: scope }
+    assignees: [echo-vladimir]
     labels: [dependencies]
     groups:
-      all-minor-patch:
+      npm-runtime-minor-patch:
+        dependency-type: production
+        patterns: ["*"]
+        update-types: [minor, patch]
+      npm-dev-minor-patch:
+        dependency-type: development
         patterns: ["*"]
         update-types: [minor, patch]
     allow:
@@ -34,3 +62,30 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: [version-update:semver-major]
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+      day: monday
+      time: "10:30"
+      timezone: Europe/Warsaw
+    open-pull-requests-limit: 2
+    versioning-strategy: increase-if-necessary
+    commit-message: { prefix: chore, include: scope }
+    assignees: [echo-vladimir]
+    labels: [dependencies, major]
+    groups:
+      npm-runtime-major:
+        dependency-type: production
+        patterns: ["*"]
+        update-types: [major]
+      npm-dev-major:
+        dependency-type: development
+        patterns: ["*"]
+        update-types: [major]
+    allow:
+      - dependency-type: direct
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-minor, version-update:semver-patch]
